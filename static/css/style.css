@@ -1,0 +1,140 @@
+:root{
+    --header-height:8vh;
+    --foot-height:1vh;
+    --main-height:calc(var(100vh) - var(--header-height) - var(--foot-height));
+}
+
+*{
+    padding:0px;
+    margin: 0px;
+}
+body {
+    width: 100%;
+    height: 100%;
+}
+.box {
+    width: 100%;
+    height: 100vh;
+}
+#particle-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+.box .header {
+    width: 100%;
+	height: calc(var(--header-height));
+	min-height: 32px;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	background: rgba(255,255,255,0.05);
+}
+.box .header .headerBox {
+	width: 40%;
+	height: 8vh;
+	line-height: 8vh;
+	margin: 0 auto;
+	border-top-right-radius: 8vh;
+	border-bottom-left-radius: 8vh;
+	flex-direction: column;
+	font-size: clamp(1.2rem, 4vw, 1rem);
+	color: white;
+}
+.box .header .headerBox h1 {
+	width: 100%;
+	text-align: center;
+}
+.box .header .timeBox {
+    font-size: clamp(1.2rem, 4vw, 1rem);
+	font-weight: bolder;
+	color: white;
+	margin-right: 1vw;
+}
+.box .container {
+    width: 96%;
+    height: calc(var(--main-height));
+    margin-left: 2%;
+	margin-right: 2%;
+	margin-top:1%;
+	display: grid;
+	  /* 定义 3 行，每行自动高度 */
+	grid-template-rows: auto auto auto;
+	  /* 定义每行的列分布 */
+	grid-template-columns: repeat(3, 1fr); /* 创建 3列，便于第2、3行放4个 */
+	gap: 16px; /* 所有元素之间的间距 */
+	box-sizing: border-box;
+    overflow: hidden;
+}
+.box .container .items {
+	background: rgba(255,255,255,0.05);
+	backdrop-filter: blur(10px);
+	box-shadow: 0 10px 30px rgb(0 0 0 / 20%);
+	transition: transform 0.3s ease;
+	color: white;
+	text-align: center;
+	border-radius: 8px;
+	font-size: 1.2rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+    overflow: hidden;
+}
+.item:nth-child(1) {
+  grid-column: span 1; /* 占2列 */
+}
+
+.item:nth-child(2) {
+  grid-column: span 1; /* 占1列 */
+}
+
+/* 第2行：4个元素，各占1列 */
+.item:nth-child(3) {
+	grid-column: span 1; /* 占2列 */
+}
+.item:nth-child(4),
+.item:nth-child(5),
+.item:nth-child(6) {
+  grid-column: span 1;
+}
+
+/* 第3行：4个元素，各占1列 */
+.item:nth-child(7),
+.item:nth-child(8),
+.item:nth-child(9) {
+    grid-column: span 1;
+}
+
+  .control-btn {
+    background: rgba(0, 30, 60, 0.8);
+    color: #00b3ff;
+    border: 1px solid #00b3ff;
+    border-radius: 15px;
+    padding: 5px 12px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    transition: all 0.3s;
+  }
+.box .lastRow {
+     max-height: 250px;
+     height: 250px;
+     overflow: hidden;
+     text-align: center;
+}
+
+.box .items .containerBall {
+    width: 100%;
+    height: 100%;
+}
+
+@media screen and (min-width: 1024px) {
+    .lastRow img {
+        width: 50%;
+    }
+    .box #canvas-container {
+      margin-left:4vw;
+    }
+}

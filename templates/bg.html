@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>优化粒子流动速度控制</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .content {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 800px;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .slider-container {
+            width: 100%;
+            margin: 15px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+        }
+
+        button {
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 126, 95, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 126, 95, 0.6);
+        }
+
+        .info {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .speed-display {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            color: #feb47b;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .preset-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: #feb47b;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .preset-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .speed-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="speed-indicator">
+        粒子速度: <span id="speed-indicator-value">1.0x</span>
+    </div>
+
+    <div class="content">
+        <h1>优化粒子流动速度控制</h1>
+        <p>使用下方滑块精细调节粒子流动速度，或使用预设按钮快速切换常见速度模式。</p>
+
+        <div class="slider-container">
+            <div class="slider-label">
+                <span>粒子流动速度</span>
+                <span class="speed-display" id="speed-value">1.0x</span>
+            </div>
+            <input type="range" id="speed-slider" min="0" max="3" step="0.05" value="1">
+        </div>
+
+        <div class="preset-buttons">
+            <div class="preset-button" data-speed="0">静止</div>
+            <div class="preset-button" data-speed="0.25">慢速</div>
+            <div class="preset-button" data-speed="0.5">中慢</div>
+            <div class="preset-button" data-speed="1">正常</div>
+            <div class="preset-button" data-speed="1.5">中快</div>
+            <div class="preset-button" data-speed="2">快速</div>
+            <div class="preset-button" data-speed="3">极速</div>
+        </div>
+
+        <div class="controls">
+            <button id="increase">增加粒子</button>
+            <button id="decrease">减少粒子</button>
+            <button id="change-color">改变颜色</button>
+            <button id="reset">重置效果</button>
+        </div>
+    </div>
+
+    <div class="info">
+        当前粒子数量: <span id="particle-count">150</span> |
+        移动鼠标与粒子互动
+    </div>
+
+    <script>
+        // 获取Canvas元素和上下文
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // 设置Canvas尺寸为窗口大小
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // 粒子数组
+        let particles = [];
+        let particleCount = 150;
+        const colors = [
+            '#ff7e5f', '#feb47b', '#45b7fe', '#6a93cb', '#a1ffce',
+            '#fad0c4', '#ffd1ff', '#a6c1ee', '#fbc2eb', '#84fab0'
+        ];
+        let currentColorIndex = 0;
+
+        // 速度控制 - 使用更平滑的速度变化
+        let speedFactor = 1.0;
+        let targetSpeedFactor = 1.0;
+        const speedChangeRate = 0.05; // 速度变化速率
+
+        // 鼠标位置
+        const mouse = {
+            x: null,
+            y: null,
+            radius: 100
+        };
+
+        // 粒子类 - 优化速度控制
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+
+                // 优化速度控制：每个粒子有基础速度
+                this.baseSpeedX = (Math.random() * 2 - 1) * 0.5;
+                this.baseSpeedY = (Math.random() * 2 - 1) * 0.5;
+
+                this.speedX = this.baseSpeedX;
+                this.speedY = this.baseSpeedY;
+
+                this.color = colors[currentColorIndex];
+                this.history = [];
+                this.maxHistory = 10;
+
+                // 添加粒子生命周期控制
+                this.life = Math.random() * 100 + 50;
+            }
+
+            update() {
+                // 应用平滑的速度变化
+                this.speedX = this.baseSpeedX * speedFactor;
+                this.speedY = this.baseSpeedY * speedFactor;
+
+                // 保存当前位置到历史记录
+                this.history.push({x: this.x, y: this.y});
+                if (this.history.length > this.maxHistory) {
+                    this.history.shift();
+                }
+
+                // 粒子移动
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // 边界检查 - 更自然的反弹
+                if (this.x < 0) {
+                    this.x = 0;
+                    this.speedX = Math.abs(this.speedX) * 0.8;
+                } else if (this.x > canvas.width) {
+                    this.x = canvas.width;
+                    this.speedX = -Math.abs(this.speedX) * 0.8;
+                }
+
+                if (this.y < 0) {
+                    this.y = 0;
+                    this.speedY = Math.abs(this.speedY) * 0.8;
+                } else if (this.y > canvas.height) {
+                    this.y = canvas.height;
+                    this.speedY = -Math.abs(this.speedY) * 0.8;
+                }
+
+                // 鼠标互动 - 速度敏感度优化
+                if (mouse.x !== null && mouse.y !== null) {
+                    const dx = mouse.x - this.x;
+                    const dy = mouse.y - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < mouse.radius) {
+                        const force = (mouse.radius - distance) / mouse.radius;
+                        const angle = Math.atan2(dy, dx);
+                        const moveX = Math.cos(angle) * force * 5 * Math.min(1, speedFactor);
+                        const moveY = Math.sin(angle) * force * 5 * Math.min(1, speedFactor);
+
+                        this.speedX -= moveX;
+                        this.speedY -= moveY;
+                    }
+                }
+
+                // 粒子生命周期管理
+                this.life--;
+                if (this.life <= 0) {
+                    this.reset();
+                }
+            }
+
+            // 重置粒子
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.life = Math.random() * 100 + 50;
+                this.history = [];
+            }
+
+            draw() {
+                // 绘制粒子轨迹 - 根据速度调整轨迹长度
+                const trailLength = Math.max(3, Math.min(15, 10 * speedFactor));
+                this.maxHistory = trailLength;
+
+                for (let i = 0; i < this.history.length; i++) {
+                    const point = this.history[i];
+                    const alpha = i / this.history.length;
+
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, this.size * alpha, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.globalAlpha = alpha * 0.5;
+                    ctx.fill();
+                }
+
+                // 绘制粒子
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = 1;
+                ctx.fill();
+            }
+        }
+
+        // 初始化粒子
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        // 动画循环
+        function animate() {
+            // 平滑的速度过渡
+            if (Math.abs(speedFactor - targetSpeedFactor) > 0.01) {
+                speedFactor += (targetSpeedFactor - speedFactor) * speedChangeRate;
+                updateSpeedDisplay();
+            }
+
+            // 创建半透明背景以实现拖尾效果
+            ctx.fillStyle = 'rgba(15, 12, 41, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 更新并绘制所有粒子
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // 更新速度显示
+        function updateSpeedDisplay() {
+            const displayValue = speedFactor.toFixed(2);
+            document.getElementById('speed-value').textContent = displayValue + 'x';
+            document.getElementById('speed-indicator-value').textContent = displayValue + 'x';
+
+            // 更新滑块位置
+            document.getElementById('speed-slider').value = targetSpeedFactor;
+        }
+
+        // 窗口大小调整处理
+        window.addEventListener('resize', function() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        // 鼠标移动事件
+        window.addEventListener('mousemove', function(event) {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        });
+
+        // 鼠标离开事件
+        window.addEventListener('mouseout', function() {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        // 速度滑块事件
+        const speedSlider = document.getElementById('speed-slider');
+
+        speedSlider.addEventListener('input', function() {
+            targetSpeedFactor = parseFloat(this.value);
+        });
+
+        // 预设按钮事件
+        document.querySelectorAll('.preset-button').forEach(button => {
+            button.addEventListener('click', function() {
+                targetSpeedFactor = parseFloat(this.dataset.speed);
+            });
+        });
+
+        // 按钮事件处理
+        document.getElementById('increase').addEventListener('click', function() {
+            particleCount += 20;
+            document.getElementById('particle-count').textContent = particleCount;
+            for (let i = 0; i < 20; i++) {
+                particles.push(new Particle());
+            }
+        });
+
+        document.getElementById('decrease').addEventListener('click', function() {
+            if (particleCount > 20) {
+                particleCount = Math.max(20, particleCount - 20);
+                document.getElementById('particle-count').textContent = particleCount;
+                particles = particles.slice(0, particleCount);
+            }
+        });
+
+        document.getElementById('change-color').addEventListener('click', function() {
+            currentColorIndex = (currentColorIndex + 1) % colors.length;
+            particles.forEach(particle => {
+                particle.color = colors[currentColorIndex];
+            });
+        });
+
+        document.getElementById('reset').addEventListener('click', function() {
+            particleCount = 150;
+            currentColorIndex = 0;
+            targetSpeedFactor = 1.0;
+            document.getElementById('particle-count').textContent = particleCount;
+            initParticles();
+        });
+
+        // 初始化并启动动画
+        initParticles();
+        animate();
+    </script>
+</body>
+</html>

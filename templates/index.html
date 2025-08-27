@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>后台主页</title>
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}"/>
+    <link rel="icon" href="{{url_for('static',filename='images/favicon.ico')}}" sizes="any" />
+</head>
+<body>
+   <canvas id="particle-canvas"></canvas>
+   <div class="box">
+       <header class="header">
+           <div class="headerBox">
+               <h1>数据监控平台</h1>
+           </div>
+           <div class="timeBox" id="time">2025-08-02 11:00:00</div>
+       </header>
+       <main class="container">
+           <div class="items">
+               <canvas id="firstCanvs"></canvas>
+           </div>
+           <div class="items">
+               <canvas id="secondCanvs"></canvas>
+           </div>
+           <div class="items">
+                 <canvas id="firstGradientChart"></canvas>
+           </div>
+           <div class="items">
+               <canvas id="oscilloscope"></canvas>
+           </div>
+           <div class="items">
+                 <canvas id="myBarChart"></canvas>
+           </div>
+           <div class="items">
+                <canvas id="spectrumChart"></canvas>
+           </div>
+           <div class="items lastRow">
+               <div class="containerBall">
+                    <div id="canvas-container"></div>
+                    <div class="controls">
+                        <button id="rotate-btn" class="control-btn">暂停旋转</button>
+                        <button id="reset-btn" class="control-btn">重置视图</button>
+                    </div>
+               </div>
+           </div>
+           <div class="items lastRow">
+                <canvas id="neonChart"></canvas>
+           </div>
+           <div class="items lastRow">
+                <img src="{{base64}}" width="100%"/>
+           </div>
+
+
+       </main>
+   </div>
+</body>
+</html>
+<script type="text/javascript" src="{{url_for('static',filename='js/jquery.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static',filename='js/bg.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static',filename='js/main.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static',filename='js/three.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static',filename='js/OrbitControls.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static',filename='js/echarts.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static',filename='js/chart.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static',filename='js/pianzhengqiu.js')}}"></script>
+
